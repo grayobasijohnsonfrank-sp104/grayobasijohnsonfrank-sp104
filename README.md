@@ -1,6 +1,6 @@
 .
 
-🚀 Quick Start
+ Quick Start
 bash
 # Clone and setup
 git clone https://github.com/your-org/sp104-traffic-detection.git
@@ -12,7 +12,7 @@ python train.py --img 640 --batch 16 --epochs 50 --data ../data/dataset.yaml --w
 
 # Run inference
 python detect.py --weights runs/train/exp/weights/best.pt --source traffic_video.mp4
-📊 Project Overview
+ Project Overview
 Goal: Build a real-time object detection system for traffic cameras using YOLOv5.
 
 Key Features:
@@ -23,12 +23,12 @@ Fine-tuned YOLOv5 on traffic data
 
 Achieve high mAP (>0.75) at 30+ FPS
 
-📂 Dataset
+ Dataset
 Source: Road Sign Detection Dataset
 
 Classes: Vehicles, Pedestrians, Traffic Signs, Bicycles
 
-🛠️ Implementation
+ Implementation
 1. Data Preparation
 Annotate traffic images
 
@@ -57,7 +57,7 @@ Video file inference
 
 Webcam demonstration
 
-📈 Results
+ Results
 Target Metrics:
 
 mAP@0.5: > 0.75
@@ -66,7 +66,7 @@ Inference Speed: 30+ FPS (GPU)
 
 Model Size: < 50MB (optimized)
 
-📁 Project Structure
+ Project Structure
 text
 data/           # Dataset and annotations
 models/         # Trained weights
