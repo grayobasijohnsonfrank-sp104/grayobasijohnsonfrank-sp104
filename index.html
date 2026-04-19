@@ -1,18 +1,352 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SP-104-Green</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YOLO Computer Vision Project</title>
   <style>
-    body {
-      color: #000;
-      font-family: Arial, sans-serif;
-      margin: 40px;
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --card2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent2: #22c55e;
+      --danger: #ef4444;
+      --border: #334155;
     }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #0f172a, #111827);
+      color: var(--text);
+    }
+
+    header {
+      padding: 28px 20px 10px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    header p {
+      margin: 10px auto 0;
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .container {
+      width: min(1100px, calc(100% - 32px));
+      margin: 20px auto 40px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.25rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    #dropZone {
+      border: 2px dashed #64748b;
+      border-radius: 16px;
+      padding: 30px 18px;
+      text-align: center;
+      background: rgba(31, 41, 55, 0.7);
+      transition: 0.2s ease;
+      cursor: pointer;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #dropZone.dragover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+      transform: scale(1.01);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button, select, input[type="file"] {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      background: var(--accent);
+    }
+
+    button.secondary { background: var(--card2); }
+    button.success { background: var(--accent2); }
+    button.danger { background: var(--danger); }
+
+    select, .filebox {
+      width: 100%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .muted { color: var(--muted); }
+    .preview {
+      width: 100%;
+      max-height: 420px;
+      border-radius: 14px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: block;
+    }
+
+    video, img, canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    #status {
+      margin-top: 10px;
+      color: #cbd5e1;
+      min-height: 22px;
+    }
+
+    .small {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>SP-104-Green</h1>
+  <header>
+    <h1>YOLO Computer Vision Project</h1>
+    <p>
+      Drag and drop images or videos, use live camera footage, and choose a model to test.
+      This is a clean GitHub Pages front end for a computer science project.
+    </p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Media Upload</h2>
+      <div id="dropZone">
+        <strong>Drag & drop</strong>
+        <span class="muted">Images or videos here</span>
+        <span class="muted">or click to choose a file</span>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,video/*" class="hidden" />
+      <p id="fileInfo" class="small">No file selected.</p>
+
+      <div class="preview" id="previewWrap" style="margin-top: 12px;">
+        <img id="imagePreview" class="hidden" alt="Image preview" />
+        <video id="videoPreview" class="hidden" controls></video>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Live Footage</h2>
+      <p class="small">Use your webcam as a live input source. This works in modern browsers that allow camera permissions [web:16].</p>
+      <video id="webcam" class="preview" autoplay playsinline muted></video>
+      <canvas id="captureCanvas" class="preview hidden"></canvas>
+
+      <div class="btn-row">
+        <button id="startCamBtn">Start Camera</button>
+        <button id="captureBtn" class="success">Capture Frame</button>
+        <button id="stopCamBtn" class="danger">Stop Camera</button>
+      </div>
+      <p id="cameraStatus" class="small">Camera is off.</p>
+    </section>
+
+    <section class="card">
+      <h2>Model Selector</h2>
+      <p class="small">Pick a model preset or upload your own model file. Browser YOLO demos often use ONNX with WebAssembly for inference [web:8][web:15].</p>
+
+      <label for="modelSelect" class="small">Choose a model</label>
+      <select id="modelSelect">
+        <option value="yolov8n.onnx">YOLOv8 Nano</option>
+        <option value="yolov8s.onnx">YOLOv8 Small</option>
+        <option value="yolov10n.onnx">YOLOv10 Nano</option>
+        <option value="custom">Custom Uploaded Model</option>
+      </select>
+
+      <label for="modelUpload" class="small" style="display:block; margin-top:14px;">Upload model file</label>
+      <input type="file" id="modelUpload" class="filebox" accept=".onnx,.pt,.bin,.json" />
+      <p id="modelInfo" class="small">Selected model: YOLOv8 Nano</p>
+    </section>
+
+    <section class="card">
+      <h2>Detection Output</h2>
+      <p class="small">
+        This area is ready for bounding boxes, confidence scores, and labels once you connect your YOLO inference code.
+      </p>
+      <div id="status">Ready.</div>
+    </section>
+  </main>
+
+  <script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const fileInfo = document.getElementById("fileInfo");
+    const imagePreview = document.getElementById("imagePreview");
+    const videoPreview = document.getElementById("videoPreview");
+    const statusBox = document.getElementById("status");
+
+    const webcam = document.getElementById("webcam");
+    const captureCanvas = document.getElementById("captureCanvas");
+    const camStatus = document.getElementById("cameraStatus");
+
+    const startCamBtn = document.getElementById("startCamBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const stopCamBtn = document.getElementById("stopCamBtn");
+
+    const modelSelect = document.getElementById("modelSelect");
+    const modelUpload = document.getElementById("modelUpload");
+    const modelInfo = document.getElementById("modelInfo");
+
+    let mediaStream = null;
+
+    function showStatus(msg) {
+      statusBox.textContent = msg;
+    }
+
+    function clearPreview() {
+      imagePreview.classList.add("hidden");
+      videoPreview.classList.add("hidden");
+      imagePreview.src = "";
+      videoPreview.src = "";
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+
+      fileInfo.textContent = `Selected file: ${file.name}`;
+      clearPreview();
+
+      if (file.type.startsWith("image/")) {
+        const url = URL.createObjectURL(file);
+        imagePreview.src = url;
+        imagePreview.classList.remove("hidden");
+        showStatus(`Loaded image: ${file.name}`);
+      } else if (file.type.startsWith("video/")) {
+        const url = URL.createObjectURL(file);
+        videoPreview.src = url;
+        videoPreview.classList.remove("hidden");
+        showStatus(`Loaded video: ${file.name}`);
+      } else {
+        showStatus("Unsupported file type.");
+      }
+    }
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    fileInput.addEventListener("change", () => handleFile(fileInput.files[0]));
+
+    modelSelect.addEventListener("change", () => {
+      modelInfo.textContent = `Selected model: ${modelSelect.value}`;
+      showStatus(`Model changed to ${modelSelect.value}`);
+    });
+
+    modelUpload.addEventListener("change", () => {
+      const file = modelUpload.files[0];
+      if (!file) return;
+      modelInfo.textContent = `Selected model: ${file.name}`;
+      modelSelect.value = "custom";
+      showStatus(`Custom model uploaded: ${file.name}`);
+    });
+
+    startCamBtn.addEventListener("click", async () => {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        webcam.srcObject = mediaStream;
+        camStatus.textContent = "Camera is on.";
+        showStatus("Live camera started.");
+      } catch (err) {
+        camStatus.textContent = "Camera could not be started.";
+        showStatus(`Camera error: ${err.name}`);
+      }
+    });
+
+    captureBtn.addEventListener("click", () => {
+      if (!webcam.videoWidth) {
+        showStatus("Start the camera first.");
+        return;
+      }
+
+      captureCanvas.width = webcam.videoWidth;
+      captureCanvas.height = webcam.videoHeight;
+      const ctx = captureCanvas.getContext("2d");
+      ctx.drawImage(webcam, 0, 0, captureCanvas.width, captureCanvas.height);
+
+      captureCanvas.classList.remove("hidden");
+      showStatus("Frame captured.");
+    });
+
+    stopCamBtn.addEventListener("click", () => {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+        webcam.srcObject = null;
+        camStatus.textContent = "Camera is off.";
+        showStatus("Camera stopped.");
+      }
+    });
+  </script>
 </body>
 </html>
