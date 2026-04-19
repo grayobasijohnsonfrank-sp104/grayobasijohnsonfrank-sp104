@@ -1,351 +1,478 @@
+Yes — I can make it so the user chooses an image, video, webcam, or CCTV stream URL, then clicks a Start button to run detection with the selected model. Browser YOLO demos commonly use onnxruntime-web for client-side inference, and live streams are typically handled with <video> for MP4/WebM or HLS/MJPEG-compatible URLs.
+
+What this version will do
+The page will have:
+
+Drag-and-drop upload.
+
+File picker for images and videos.
+
+Webcam start/stop.
+
+CCTV stream URL input.
+
+Model selector.
+
+A single Start Detection button that runs the selected source.
+
+For browser-based YOLO, the usual approach is ONNX model inference in JavaScript, often with WebAssembly or WebGPU support. For CCTV links, the source must be a browser-playable stream such as HLS (.m3u8) or MJPEG; raw RTSP usually will not work directly in GitHub Pages.
+
+Full index.html
+This is a working front-end scaffold with the run button included. It previews the chosen source and prepares the page so you can connect YOLO inference next.
+
+xml
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YOLO Computer Vision Project</title>
+  <title>YOLO Detection Viewer</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #111827;
-      --card2: #1f2937;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #38bdf8;
-      --accent2: #22c55e;
-      --danger: #ef4444;
-      --border: #334155;
+    :root{
+      --bg:#0b1220;
+      --card:#111827;
+      --card2:#1f2937;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#38bdf8;
+      --green:#22c55e;
+      --red:#ef4444;
+      --border:#334155;
     }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(180deg, #0f172a, #111827);
-      color: var(--text);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#0b1220,#111827);
+      color:var(--text);
     }
-
-    header {
-      padding: 28px 20px 10px;
-      text-align: center;
+    header{
+      padding:28px 18px 10px;
+      text-align:center;
     }
-
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
+    header h1{margin:0;font-size:2rem}
+    header p{max-width:820px;margin:10px auto 0;color:var(--muted);line-height:1.5}
+    .container{
+      width:min(1180px,calc(100% - 24px));
+      margin:18px auto 36px;
+      display:grid;
+      gap:16px;
+      grid-template-columns:1fr;
     }
-
-    header p {
-      margin: 10px auto 0;
-      max-width: 720px;
-      color: var(--muted);
-      line-height: 1.5;
+    .card{
+      background:rgba(17,24,39,.96);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 12px 30px rgba(0,0,0,.22);
     }
-
-    .container {
-      width: min(1100px, calc(100% - 32px));
-      margin: 20px auto 40px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
+    h2{margin:0 0 12px;font-size:1.2rem}
+    .grid{
+      display:grid;
+      gap:16px;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
     }
-
-    .card {
-      background: rgba(17, 24, 39, 0.92);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    #dropZone{
+      border:2px dashed #64748b;
+      background:rgba(31,41,55,.7);
+      border-radius:16px;
+      min-height:180px;
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.2s ease;
     }
-
-    .card h2 {
-      margin-top: 0;
-      margin-bottom: 12px;
-      font-size: 1.25rem;
+    #dropZone.dragover{
+      border-color:var(--accent);
+      background:rgba(56,189,248,.12);
+      transform:scale(1.01);
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 18px;
+    .muted{color:var(--muted)}
+    .small{font-size:.93rem;line-height:1.45;color:var(--muted)}
+    .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    button,select,input[type="text"]{
+      font:inherit;
     }
-
-    #dropZone {
-      border: 2px dashed #64748b;
-      border-radius: 16px;
-      padding: 30px 18px;
-      text-align: center;
-      background: rgba(31, 41, 55, 0.7);
-      transition: 0.2s ease;
-      cursor: pointer;
-      min-height: 180px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+    button{
+      border:0;
+      padding:11px 16px;
+      border-radius:10px;
+      cursor:pointer;
+      color:white;
+      background:var(--accent);
     }
-
-    #dropZone.dragover {
-      border-color: var(--accent);
-      background: rgba(56, 189, 248, 0.12);
-      transform: scale(1.01);
+    button.secondary{background:var(--card2)}
+    button.success{background:var(--green)}
+    button.danger{background:var(--red)}
+    select,input[type="text"]{
+      width:100%;
+      margin-top:8px;
+      padding:12px;
+      border-radius:10px;
+      background:var(--card2);
+      color:var(--text);
+      border:1px solid var(--border);
+      outline:none;
     }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
+    .preview{
+      width:100%;
+      background:#0a1020;
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      min-height:220px;
     }
-
-    button, select, input[type="file"] {
-      font: inherit;
+    img,video,canvas{
+      width:100%;
+      display:block;
+      max-height:520px;
+      object-fit:contain;
+      background:#0a1020;
     }
-
-    button {
-      border: 0;
-      padding: 11px 16px;
-      border-radius: 10px;
-      cursor: pointer;
-      color: white;
-      background: var(--accent);
+    .hidden{display:none}
+    #status{
+      margin-top:10px;
+      min-height:24px;
+      color:#dbeafe;
     }
-
-    button.secondary { background: var(--card2); }
-    button.success { background: var(--accent2); }
-    button.danger { background: var(--danger); }
-
-    select, .filebox {
-      width: 100%;
-      background: var(--card2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 8px;
+    .sourceLabel{
+      display:inline-block;
+      margin-top:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#0f172a;
+      border:1px solid var(--border);
+      color:#cbd5e1;
+      font-size:.9rem;
     }
-
-    .muted { color: var(--muted); }
-    .preview {
-      width: 100%;
-      max-height: 420px;
-      border-radius: 14px;
-      background: #0b1220;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      display: block;
-    }
-
-    video, img, canvas {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    #status {
-      margin-top: 10px;
-      color: #cbd5e1;
-      min-height: 22px;
-    }
-
-    .small {
-      font-size: 0.92rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .hidden { display: none; }
   </style>
 </head>
 <body>
   <header>
-    <h1>YOLO Computer Vision Project</h1>
+    <h1>YOLO Detection Viewer</h1>
     <p>
-      Drag and drop images or videos, use live camera footage, and choose a model to test.
-      This is a clean GitHub Pages front end for a computer science project.
+      Upload an image or video, use the webcam, or paste a CCTV stream URL.
+      Choose a model and press Start Detection to run the selected source.
     </p>
   </header>
 
   <main class="container">
     <section class="card">
-      <h2>Media Upload</h2>
-      <div id="dropZone">
-        <strong>Drag & drop</strong>
-        <span class="muted">Images or videos here</span>
-        <span class="muted">or click to choose a file</span>
-      </div>
-      <input type="file" id="fileInput" accept="image/*,video/*" class="hidden" />
-      <p id="fileInfo" class="small">No file selected.</p>
+      <h2>Choose Source</h2>
+      <div class="grid">
+        <div>
+          <div id="dropZone">
+            <strong>Drag & drop</strong>
+            <span class="muted">Images or videos here</span>
+            <span class="muted">or click to choose a file</span>
+          </div>
+          <input type="file" id="fileInput" accept="image/*,video/*" class="hidden" />
+          <p id="fileInfo" class="small">No file selected.</p>
+          <span id="sourceType" class="sourceLabel">Source: none</span>
+        </div>
 
-      <div class="preview" id="previewWrap" style="margin-top: 12px;">
-        <img id="imagePreview" class="hidden" alt="Image preview" />
-        <video id="videoPreview" class="hidden" controls></video>
+        <div>
+          <label class="small" for="cameraBtn">Webcam</label>
+          <div class="row">
+            <button id="cameraBtn" class="secondary">Use Webcam</button>
+            <button id="stopCameraBtn" class="danger">Stop Webcam</button>
+          </div>
+          <p class="small">This uses browser camera access via <code>getUserMedia</code> [web:16].</p>
+
+          <label class="small" for="cctvUrl">CCTV / Stream URL</label>
+          <input id="cctvUrl" type="text" placeholder="Paste HLS (.m3u8), MJPEG, or browser-playable stream URL" />
+          <div class="row">
+            <button id="loadStreamBtn" class="secondary">Load Stream</button>
+            <button id="clearStreamBtn" class="danger">Clear Stream</button>
+          </div>
+          <p class="small">A browser-playable stream works best with HLS or MJPEG; RTSP usually needs conversion first [web:22][web:34].</p>
+        </div>
       </div>
     </section>
 
     <section class="card">
-      <h2>Live Footage</h2>
-      <p class="small">Use your webcam as a live input source. This works in modern browsers that allow camera permissions [web:16].</p>
-      <video id="webcam" class="preview" autoplay playsinline muted></video>
-      <canvas id="captureCanvas" class="preview hidden"></canvas>
-
-      <div class="btn-row">
-        <button id="startCamBtn">Start Camera</button>
-        <button id="captureBtn" class="success">Capture Frame</button>
-        <button id="stopCamBtn" class="danger">Stop Camera</button>
+      <h2>Model Selection</h2>
+      <div class="grid">
+        <div>
+          <label class="small" for="modelSelect">Select model</label>
+          <select id="modelSelect">
+            <option value="yolov8n.onnx">YOLOv8 Nano</option>
+            <option value="yolov8s.onnx">YOLOv8 Small</option>
+            <option value="yolov10n.onnx">YOLOv10 Nano</option>
+            <option value="custom">Custom Uploaded Model</option>
+          </select>
+        </div>
+        <div>
+          <label class="small" for="modelUpload">Upload model</label>
+          <input id="modelUpload" type="file" accept=".onnx,.pt,.bin,.json" />
+          <p id="modelInfo" class="small">Selected model: YOLOv8 Nano</p>
+        </div>
       </div>
-      <p id="cameraStatus" class="small">Camera is off.</p>
     </section>
 
     <section class="card">
-      <h2>Model Selector</h2>
-      <p class="small">Pick a model preset or upload your own model file. Browser YOLO demos often use ONNX with WebAssembly for inference [web:8][web:15].</p>
+      <h2>Preview</h2>
+      <div class="preview">
+        <img id="imagePreview" class="hidden" alt="Uploaded preview" />
+        <video id="videoPreview" class="hidden" controls playsinline></video>
+        <video id="webcam" class="hidden" autoplay playsinline muted></video>
+        <canvas id="canvasPreview" class="hidden"></canvas>
+      </div>
 
-      <label for="modelSelect" class="small">Choose a model</label>
-      <select id="modelSelect">
-        <option value="yolov8n.onnx">YOLOv8 Nano</option>
-        <option value="yolov8s.onnx">YOLOv8 Small</option>
-        <option value="yolov10n.onnx">YOLOv10 Nano</option>
-        <option value="custom">Custom Uploaded Model</option>
-      </select>
-
-      <label for="modelUpload" class="small" style="display:block; margin-top:14px;">Upload model file</label>
-      <input type="file" id="modelUpload" class="filebox" accept=".onnx,.pt,.bin,.json" />
-      <p id="modelInfo" class="small">Selected model: YOLOv8 Nano</p>
-    </section>
-
-    <section class="card">
-      <h2>Detection Output</h2>
-      <p class="small">
-        This area is ready for bounding boxes, confidence scores, and labels once you connect your YOLO inference code.
-      </p>
-      <div id="status">Ready.</div>
+      <div class="row">
+        <button id="startBtn" class="success">Start Detection</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+      <div id="status">Choose a source and model, then press Start Detection.</div>
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
-    const fileInfo = document.getElementById("fileInfo");
-    const imagePreview = document.getElementById("imagePreview");
-    const videoPreview = document.getElementById("videoPreview");
-    const statusBox = document.getElementById("status");
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const sourceType = document.getElementById('sourceType');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    const webcam = document.getElementById('webcam');
+    const canvasPreview = document.getElementById('canvasPreview');
+    const statusBox = document.getElementById('status');
 
-    const webcam = document.getElementById("webcam");
-    const captureCanvas = document.getElementById("captureCanvas");
-    const camStatus = document.getElementById("cameraStatus");
+    const cameraBtn = document.getElementById('cameraBtn');
+    const stopCameraBtn = document.getElementById('stopCameraBtn');
+    const cctvUrl = document.getElementById('cctvUrl');
+    const loadStreamBtn = document.getElementById('loadStreamBtn');
+    const clearStreamBtn = document.getElementById('clearStreamBtn');
 
-    const startCamBtn = document.getElementById("startCamBtn");
-    const captureBtn = document.getElementById("captureBtn");
-    const stopCamBtn = document.getElementById("stopCamBtn");
+    const modelSelect = document.getElementById('modelSelect');
+    const modelUpload = document.getElementById('modelUpload');
+    const modelInfo = document.getElementById('modelInfo');
 
-    const modelSelect = document.getElementById("modelSelect");
-    const modelUpload = document.getElementById("modelUpload");
-    const modelInfo = document.getElementById("modelInfo");
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
+    let currentSource = null;
+    let currentKind = null;
     let mediaStream = null;
+    let hlsPlayer = null;
 
-    function showStatus(msg) {
-      statusBox.textContent = msg;
+    function setStatus(msg){ statusBox.textContent = msg; }
+    function setSourceLabel(msg){ sourceType.textContent = `Source: ${msg}`; }
+
+    function hideAllPreviews(){
+      imagePreview.classList.add('hidden');
+      videoPreview.classList.add('hidden');
+      webcam.classList.add('hidden');
+      canvasPreview.classList.add('hidden');
     }
 
-    function clearPreview() {
-      imagePreview.classList.add("hidden");
-      videoPreview.classList.add("hidden");
-      imagePreview.src = "";
-      videoPreview.src = "";
-    }
-
-    function handleFile(file) {
-      if (!file) return;
-
-      fileInfo.textContent = `Selected file: ${file.name}`;
-      clearPreview();
-
-      if (file.type.startsWith("image/")) {
-        const url = URL.createObjectURL(file);
-        imagePreview.src = url;
-        imagePreview.classList.remove("hidden");
-        showStatus(`Loaded image: ${file.name}`);
-      } else if (file.type.startsWith("video/")) {
-        const url = URL.createObjectURL(file);
-        videoPreview.src = url;
-        videoPreview.classList.remove("hidden");
-        showStatus(`Loaded video: ${file.name}`);
-      } else {
-        showStatus("Unsupported file type.");
+    function clearStreamPlayer(){
+      if (hlsPlayer) {
+        hlsPlayer.destroy();
+        hlsPlayer = null;
       }
+      videoPreview.pause();
+      videoPreview.removeAttribute('src');
+      videoPreview.load();
     }
 
-    dropZone.addEventListener("click", () => fileInput.click());
+    function selectImagePreview(url){
+      hideAllPreviews();
+      clearStreamPlayer();
+      imagePreview.src = url;
+      imagePreview.classList.remove('hidden');
+    }
 
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
-    });
+    function selectVideoPreview(url){
+      hideAllPreviews();
+      clearStreamPlayer();
+      videoPreview.src = url;
+      videoPreview.classList.remove('hidden');
+    }
 
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.classList.remove("dragover");
-    });
+    function selectWebcamPreview(){
+      hideAllPreviews();
+      webcam.classList.remove('hidden');
+    }
 
-    dropZone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropZone.classList.remove("dragover");
-      const file = e.dataTransfer.files[0];
-      handleFile(file);
-    });
+    function selectCanvasPreview(){
+      hideAllPreviews();
+      canvasPreview.classList.remove('hidden');
+    }
 
-    fileInput.addEventListener("change", () => handleFile(fileInput.files[0]));
-
-    modelSelect.addEventListener("change", () => {
-      modelInfo.textContent = `Selected model: ${modelSelect.value}`;
-      showStatus(`Model changed to ${modelSelect.value}`);
-    });
-
-    modelUpload.addEventListener("change", () => {
-      const file = modelUpload.files[0];
+    function handleFile(file){
       if (!file) return;
-      modelInfo.textContent = `Selected model: ${file.name}`;
-      modelSelect.value = "custom";
-      showStatus(`Custom model uploaded: ${file.name}`);
+      fileInfo.textContent = `Selected file: ${file.name}`;
+      currentSource = file;
+      currentKind = file.type.startsWith('image/') ? 'image' : 'video';
+      setSourceLabel(file.name);
+
+      const url = URL.createObjectURL(file);
+      if (currentKind === 'image') {
+        selectImagePreview(url);
+      } else {
+        selectVideoPreview(url);
+      }
+      setStatus(`Loaded ${currentKind}: ${file.name}. Press Start Detection.`);
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
     });
 
-    startCamBtn.addEventListener("click", async () => {
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+    cameraBtn.addEventListener('click', async () => {
       try {
+        stopCamera();
         mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         webcam.srcObject = mediaStream;
-        camStatus.textContent = "Camera is on.";
-        showStatus("Live camera started.");
+        currentSource = webcam;
+        currentKind = 'webcam';
+        selectWebcamPreview();
+        setSourceLabel('webcam');
+        setStatus('Webcam ready. Press Start Detection.');
       } catch (err) {
-        camStatus.textContent = "Camera could not be started.";
-        showStatus(`Camera error: ${err.name}`);
+        setStatus(`Camera error: ${err.name}`);
       }
     });
 
-    captureBtn.addEventListener("click", () => {
-      if (!webcam.videoWidth) {
-        showStatus("Start the camera first.");
+    function stopCamera(){
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+      webcam.srcObject = null;
+    }
+
+    stopCameraBtn.addEventListener('click', () => {
+      stopCamera();
+      if (currentKind === 'webcam') {
+        currentSource = null;
+        currentKind = null;
+      }
+      setStatus('Webcam stopped.');
+      setSourceLabel('none');
+      hideAllPreviews();
+    });
+
+    loadStreamBtn.addEventListener('click', async () => {
+      const url = cctvUrl.value.trim();
+      if (!url) {
+        setStatus('Paste a CCTV stream URL first.');
         return;
       }
 
-      captureCanvas.width = webcam.videoWidth;
-      captureCanvas.height = webcam.videoHeight;
-      const ctx = captureCanvas.getContext("2d");
-      ctx.drawImage(webcam, 0, 0, captureCanvas.width, captureCanvas.height);
+      stopCamera();
+      currentSource = url;
+      currentKind = 'stream';
+      setSourceLabel('CCTV stream');
+      hideAllPreviews();
+      clearStreamPlayer();
 
-      captureCanvas.classList.remove("hidden");
-      showStatus("Frame captured.");
+      if (url.endsWith('.m3u8') && window.Hls && Hls.isSupported()) {
+        hlsPlayer = new Hls();
+        hlsPlayer.loadSource(url);
+        hlsPlayer.attachMedia(videoPreview);
+        videoPreview.classList.remove('hidden');
+        videoPreview.play().catch(() => {});
+        setStatus('HLS stream loaded. Press Start Detection.');
+      } else {
+        videoPreview.src = url;
+        videoPreview.classList.remove('hidden');
+        videoPreview.play().catch(() => {});
+        setStatus('Stream loaded. Press Start Detection.');
+      }
     });
 
-    stopCamBtn.addEventListener("click", () => {
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        mediaStream = null;
-        webcam.srcObject = null;
-        camStatus.textContent = "Camera is off.";
-        showStatus("Camera stopped.");
+    clearStreamBtn.addEventListener('click', () => {
+      cctvUrl.value = '';
+      clearStreamPlayer();
+      if (currentKind === 'stream') {
+        currentSource = null;
+        currentKind = null;
       }
+      setStatus('Stream cleared.');
+      setSourceLabel('none');
+      hideAllPreviews();
+    });
+
+    modelSelect.addEventListener('change', () => {
+      modelInfo.textContent = `Selected model: ${modelSelect.value}`;
+    });
+
+    modelUpload.addEventListener('change', () => {
+      const file = modelUpload.files[0];
+      if (!file) return;
+      modelSelect.value = 'custom';
+      modelInfo.textContent = `Selected model: ${file.name}`;
+      setStatus(`Custom model uploaded: ${file.name}`);
+    });
+
+    async function runDetection(){
+      if (!currentSource || !currentKind) {
+        setStatus('Choose an image, video, webcam, or stream first.');
+        return;
+      }
+      setStatus(`Running detection on ${currentKind} with model ${modelSelect.value}.`);
+
+      if (currentKind === 'image') {
+        selectCanvasPreview();
+        const ctx = canvasPreview.getContext('2d');
+        canvasPreview.width = imagePreview.naturalWidth || imagePreview.width;
+        canvasPreview.height = imagePreview.naturalHeight || imagePreview.height;
+        ctx.drawImage(imagePreview, 0, 0, canvasPreview.width, canvasPreview.height);
+        setStatus('Image is ready for YOLO inference overlay.');
+        return;
+      }
+
+      if (currentKind === 'video' || currentKind === 'stream') {
+        videoPreview.classList.remove('hidden');
+        const playPromise = videoPreview.play();
+        if (playPromise) await playPromise.catch(() => {});
+        setStatus('Video or stream is playing and ready for frame-by-frame detection.');
+        return;
+      }
+
+      if (currentKind === 'webcam') {
+        webcam.classList.remove('hidden');
+        setStatus('Webcam is active and ready for live detection.');
+      }
+    }
+
+    startBtn.addEventListener('click', runDetection);
+
+    resetBtn.addEventListener('click', () => {
+      stopCamera();
+      clearStreamPlayer();
+      currentSource = null;
+      currentKind = null;
+      fileInfo.textContent = 'No file selected.';
+      sourceType.textContent = 'Source: none';
+      modelSelect.value = 'yolov8n.onnx';
+      modelInfo.textContent = 'Selected model: YOLOv8 Nano';
+      cctvUrl.value = '';
+      fileInput.value = '';
+      modelUpload.value = '';
+      hideAllPreviews();
+      setStatus('Reset complete.');
     });
   </script>
 </body>
