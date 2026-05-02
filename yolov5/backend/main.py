@@ -1,7 +1,8 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'yolov5'))
+yolov5_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, yolov5_root)
 
 from fastapi import FastAPI, File, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,10 +17,12 @@ import tempfile
 
 app = FastAPI()
 
-# Allow GitHub Pages frontend to talk to this server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://grayobasijohnsonfrank-sp104.github.io",
+        "http://localhost:8000"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
