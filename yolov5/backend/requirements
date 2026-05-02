@@ -6,3 +6,4 @@ opencv-python-headless
 Pillow
 python-multipart
 websockets
+ultralytics
