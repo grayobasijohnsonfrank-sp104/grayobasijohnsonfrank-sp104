@@ -1,26 +1,3 @@
-Yes — I can make it so the user chooses an image, video, webcam, or CCTV stream URL, then clicks a Start button to run detection with the selected model. Browser YOLO demos commonly use onnxruntime-web for client-side inference, and live streams are typically handled with <video> for MP4/WebM or HLS/MJPEG-compatible URLs.
-
-What this version will do
-The page will have:
-
-Drag-and-drop upload.
-
-File picker for images and videos.
-
-Webcam start/stop.
-
-CCTV stream URL input.
-
-Model selector.
-
-A single Start Detection button that runs the selected source.
-
-For browser-based YOLO, the usual approach is ONNX model inference in JavaScript, often with WebAssembly or WebGPU support. For CCTV links, the source must be a browser-playable stream such as HLS (.m3u8) or MJPEG; raw RTSP usually will not work directly in GitHub Pages.
-
-Full index.html
-This is a working front-end scaffold with the run button included. It previews the chosen source and prepares the page so you can connect YOLO inference next.
-
-xml
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -477,3 +454,4 @@ xml
   </script>
 </body>
 </html>
+
