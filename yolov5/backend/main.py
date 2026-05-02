@@ -25,19 +25,27 @@ app.add_middleware(
 )
 
 # Load model once on startup
-model = torch.hub.load(
-    os.path.join(os.path.dirname(__file__), '..'),
-    'custom',
-    path=os.path.join(os.path.dirname(__file__), 'best.pt'),
-    source='local'
-)
-model.conf = 0.25
+model = None
 
+@app.on_event("startup")
+async def load_model():
+    global model
+    print("Loading model...")
+    yolov5_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    print(f"YOLOv5 path: {yolov5_path}")
+    print(f"hubconf exists: {os.path.exists(os.path.join(yolov5_path, 'hubconf.py'))}")
+    model = torch.hub.load(
+        yolov5_path,
+        'custom',
+        path=os.path.join(os.path.dirname(__file__), 'best.pt'),
+        source='local'
+    )
+    model.conf = 0.25
+    print("Model loaded successfully!")
 
 @app.get("/")
 def health_check():
-    return {"status": "running"}
-
+    return {"status": "running", "model_loaded": model is not None}
 
 # ── Image detection ──────────────────────────────────────────
 @app.post("/detect/image")
