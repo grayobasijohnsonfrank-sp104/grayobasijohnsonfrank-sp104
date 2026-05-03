@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Traffic Detection</title>
+  <title>SP-104 Green Traffic</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -12,11 +12,10 @@
       --surface: #13161e;
       --surface2: #1a1e28;
       --border: #252a38;
-      --border-active: #3d8ef8;
       --text: #e2e6f0;
       --muted: #6b7280;
-      --accent: #3d8ef8;
-      --success: #22c55e;
+      --accent: #22c55e;
+      --accent2: #3d8ef8;
       --danger: #ef4444;
       --mono: 'IBM Plex Mono', monospace;
       --sans: 'IBM Plex Sans', sans-serif;
@@ -29,73 +28,171 @@
       color: var(--text);
       font-family: var(--sans);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
+    /* ── HEADER ── */
     header {
       border-bottom: 1px solid var(--border);
-      padding: 20px 32px;
+      padding: 0 40px;
+      height: 60px;
       display: flex;
-      align-items: baseline;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
       gap: 16px;
+    }
+
+    .project-id {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.25);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
     }
 
     header h1 {
       font-family: var(--mono);
       font-size: 1rem;
       font-weight: 500;
-      letter-spacing: 0.04em;
       color: var(--text);
     }
 
-    header span {
+    .course-tag {
       font-family: var(--mono);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
     }
 
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      height: calc(100vh - 61px);
+    nav {
+      display: flex;
+      gap: 8px;
     }
 
-    .panel {
-      border-right: 1px solid var(--border);
+    nav a {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    nav a:hover { color: var(--text); border-color: var(--muted); }
+
+    nav a.green {
+      border-color: rgba(34,197,94,0.35);
+      color: var(--accent);
+    }
+
+    nav a.green:hover { background: rgba(34,197,94,0.07); }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 40px 60px;
       display: flex;
       flex-direction: column;
+      gap: 40px;
     }
 
-    .panel:last-child {
-      border-right: none;
-    }
-
-    .panel-header {
-      padding: 14px 24px;
-      border-bottom: 1px solid var(--border);
+    /* ── SECTION LABEL ── */
+    .section-label {
       font-family: var(--mono);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--muted);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
+      margin-bottom: 16px;
     }
 
-    .panel-body {
-      flex: 1;
+    /* ── TEAM ── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .team-member {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .avatar-initials {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      color: var(--muted);
+    }
+
+    .member-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+    }
+
+    /* ── DETECTION ── */
+    .detection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .det-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 24px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      overflow-y: auto;
+    }
+
+    .det-panel-title {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
 
     #dropZone {
       border: 1px dashed var(--border);
-      border-radius: 8px;
-      min-height: 160px;
+      border-radius: 10px;
+      padding: 36px 24px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -103,77 +200,60 @@
       gap: 8px;
       cursor: pointer;
       transition: border-color 0.15s, background 0.15s;
-      background: var(--surface);
-      padding: 32px;
       text-align: center;
     }
 
-    #dropZone:hover,
-    #dropZone.dragover {
-      border-color: var(--border-active);
-      background: rgba(61, 142, 248, 0.04);
+    #dropZone:hover, #dropZone.dragover {
+      border-color: var(--accent2);
+      background: rgba(61,142,248,0.04);
     }
 
-    #dropZone .label {
-      font-size: 0.9rem;
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    #dropZone .sub {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
+    #dropZone .label { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+    #dropZone .sub   { font-size: 0.8rem; color: var(--muted); }
 
     input[type="file"] { display: none; }
 
     .file-info {
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--muted);
       padding: 10px 14px;
-      background: var(--surface);
-      border-radius: 6px;
+      background: var(--bg);
+      border-radius: 8px;
       border: 1px solid var(--border);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .image-container {
-      flex: 1;
-      background: var(--surface);
-      border-radius: 8px;
+    .image-box {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg);
+      border-radius: 10px;
       border: 1px solid var(--border);
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 240px;
-      position: relative;
     }
 
-    .image-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-    }
+    .image-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
     .placeholder {
       color: var(--muted);
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       text-align: center;
-      padding: 24px;
+      padding: 20px;
     }
 
     .btn {
       font-family: var(--sans);
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       font-weight: 500;
       padding: 11px 20px;
-      border-radius: 7px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
@@ -181,50 +261,35 @@
 
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-    }
-
+    .btn-primary { background: var(--accent2); color: white; }
     .btn-primary:hover:not(:disabled) { opacity: 0.88; }
-
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-secondary:hover:not(:disabled) { border-color: var(--muted); }
 
-    .row {
-      display: flex;
-      gap: 10px;
-    }
-
+    .row { display: flex; gap: 10px; }
     .row .btn { flex: 1; }
 
     #status {
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       padding: 10px 14px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid var(--border);
-      background: var(--surface);
+      background: var(--bg);
       color: var(--muted);
       line-height: 1.5;
     }
 
-    #status.running { color: var(--accent); border-color: rgba(61,142,248,0.3); }
-    #status.success { color: var(--success); border-color: rgba(34,197,94,0.3); }
+    #status.running { color: var(--accent2); border-color: rgba(61,142,248,0.3); }
+    #status.success { color: var(--accent);  border-color: rgba(34,197,94,0.3); }
     #status.error   { color: var(--danger);  border-color: rgba(239,68,68,0.3); }
 
     .spinner {
       display: inline-block;
-      width: 12px;
-      height: 12px;
+      width: 11px;
+      height: 11px;
       border: 2px solid rgba(61,142,248,0.3);
-      border-top-color: var(--accent);
+      border-top-color: var(--accent2);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       vertical-align: middle;
@@ -233,130 +298,135 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .detections {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    .detection-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.85rem;
-    }
-
-    .detection-label {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--text);
-    }
-
-    .detection-conf {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      color: var(--accent);
-      background: rgba(61,142,248,0.1);
-      padding: 3px 8px;
-      border-radius: 4px;
-    }
-
-    .no-detections {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--muted);
-      text-align: center;
-      padding: 24px;
-    }
-
-    @media (max-width: 768px) {
-      main {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-      .panel { border-right: none; border-bottom: 1px solid var(--border); }
+    @media (max-width: 900px) {
+      .team-grid { grid-template-columns: repeat(2, 1fr); }
+      .detection-grid { grid-template-columns: 1fr; }
+      header { padding: 0 20px; }
+      .page { padding: 24px 20px 48px; }
+      .course-tag { display: none; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Traffic Detection</h1>
-  <span>YOLOv5 — SP104</span>
+  <div class="header-left">
+    <span class="project-id">SP-104</span>
+    <h1>Green Traffic Detection</h1>
+    <span class="course-tag">CS 4850 — Section 01/02 — Spring 2026</span>
+  </div>
+  <nav>
+    <a href="https://github.com/grayobasijohnsonfrank-sp104/grayobasijohnsonfrank-sp104" target="_blank">GitHub</a>
+    <a href="report.pdf" target="_blank" class="green">Final Report</a>
+    <a href="#" id="videoLink">Presentation</a>
+  </nav>
 </header>
 
-<main>
-  <!-- LEFT: Input -->
-  <div class="panel">
-    <div class="panel-header">Input</div>
-    <div class="panel-body">
+<div class="page">
 
-      <div id="dropZone">
-        <span class="label">Drop image here</span>
-        <span class="sub">or click to select a file</span>
-      </div>
-      <input type="file" id="fileInput" accept="image/*" />
+  <!-- TEAM -->
+  <section>
+    <div class="section-label">Team</div>
+    <div class="team-grid">
 
-      <div class="file-info" id="fileInfo">No file selected</div>
-
-      <div class="image-container" id="inputContainer">
-        <div class="placeholder">Input image will appear here</div>
+      <div class="team-member">
+        <div class="avatar">
+          <img src="assets/bio_pics/bfrank_pic.png" alt="BF"
+            onerror="this.parentNode.innerHTML='<span class=&quot;avatar-initials&quot;>BF</span>'" />
+        </div>
+        <span class="member-name">Bregan Frank</span>
       </div>
 
-      <div class="row">
-        <button class="btn btn-primary" id="detectBtn" disabled>Run Detection</button>
-        <button class="btn btn-secondary" id="resetBtn">Reset</button>
+      <div class="team-member">
+        <div class="avatar">
+          <img src="assets/bio_pics/zgray_pic.jpg" alt="ZG"
+            onerror="this.parentNode.innerHTML='<span class=&quot;avatar-initials&quot;>ZG</span>'" />
+        </div>
+        <span class="member-name">Zachary Gray</span>
       </div>
 
-      <div id="status">Select an image to begin.</div>
-
-    </div>
-  </div>
-
-  <!-- RIGHT: Output -->
-  <div class="panel">
-    <div class="panel-header">Output</div>
-    <div class="panel-body">
-
-      <div class="image-container" id="outputContainer">
-        <div class="placeholder">Annotated result will appear here</div>
+      <div class="team-member">
+        <div class="avatar">
+          <img src="assets/bio_pics/jjohnson_pic.png" alt="JJ"
+            onerror="this.parentNode.innerHTML='<span class=&quot;avatar-initials&quot;>JJ</span>'" />
+        </div>
+        <span class="member-name">Jeyden Johnson</span>
       </div>
 
-      <div id="detectionList">
-        <div class="no-detections">No detections yet.</div>
+      <div class="team-member">
+        <div class="avatar">
+          <img src="assets/bio_pics/dobasi_pic.jpg" alt="DO"
+            onerror="this.parentNode.innerHTML='<span class=&quot;avatar-initials&quot;>DO</span>'" />
+        </div>
+        <span class="member-name">David Obasi</span>
       </div>
 
     </div>
-  </div>
-</main>
+  </section>
+
+  <!-- DETECTION -->
+  <section>
+    <div class="section-label">Detection</div>
+    <div class="detection-grid">
+
+      <!-- Input Panel -->
+      <div class="det-panel">
+        <div class="det-panel-title">Input</div>
+
+        <div id="dropZone">
+          <span class="label">Drop image here</span>
+          <span class="sub">or click to select a file</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" />
+
+        <div class="file-info" id="fileInfo">No file selected</div>
+
+        <div class="image-box" id="inputBox">
+          <div class="placeholder">Input image will appear here</div>
+        </div>
+
+        <div class="row">
+          <button class="btn btn-primary" id="detectBtn" disabled>Run Detection</button>
+          <button class="btn btn-secondary" id="resetBtn">Reset</button>
+        </div>
+
+        <div id="status">Select an image to begin.</div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="det-panel">
+        <div class="det-panel-title">Output</div>
+        <div class="image-box" id="outputBox">
+          <div class="placeholder">Annotated result will appear here</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
 
 <script>
   const API = 'https://sp104greentraff-traffic-detection-api.hf.space';
 
-  const dropZone       = document.getElementById('dropZone');
-  const fileInput      = document.getElementById('fileInput');
-  const fileInfo       = document.getElementById('fileInfo');
-  const inputContainer = document.getElementById('inputContainer');
-  const outputContainer= document.getElementById('outputContainer');
-  const detectBtn      = document.getElementById('detectBtn');
-  const resetBtn       = document.getElementById('resetBtn');
-  const statusBox      = document.getElementById('status');
-  const detectionList  = document.getElementById('detectionList');
+  const dropZone  = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileInfo  = document.getElementById('fileInfo');
+  const inputBox  = document.getElementById('inputBox');
+  const outputBox = document.getElementById('outputBox');
+  const detectBtn = document.getElementById('detectBtn');
+  const resetBtn  = document.getElementById('resetBtn');
+  const statusBox = document.getElementById('status');
 
   let selectedFile = null;
 
   function setStatus(msg, type = '') {
     statusBox.className = type;
     statusBox.innerHTML = (type === 'running' ? '<span class="spinner"></span>' : '') + msg;
-  }
-
-  function showInputImage(file) {
-    const url = URL.createObjectURL(file);
-    inputContainer.innerHTML = `<img src="${url}" alt="Input" />`;
   }
 
   function handleFile(file) {
@@ -366,9 +436,8 @@
     }
     selectedFile = file;
     fileInfo.textContent = file.name;
-    showInputImage(file);
-    outputContainer.innerHTML = '<div class="placeholder">Run detection to see results.</div>';
-    detectionList.innerHTML = '<div class="no-detections">No detections yet.</div>';
+    inputBox.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Input" />`;
+    outputBox.innerHTML = '<div class="placeholder">Run detection to see results.</div>';
     detectBtn.disabled = false;
     setStatus('Image loaded. Press Run Detection.');
   }
@@ -385,31 +454,16 @@
 
   detectBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
-
     detectBtn.disabled = true;
     setStatus('Sending to detection server...', 'running');
-
     const formData = new FormData();
     formData.append('file', selectedFile);
-
     try {
-      const response = await fetch(`${API}/detect/image`, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(`Server error ${response.status}: ${err}`);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      outputContainer.innerHTML = `<img src="${url}" alt="Detection result" />`;
-
+      const res = await fetch(`${API}/detect/image`, { method: 'POST', body: formData });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const blob = await res.blob();
+      outputBox.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Result" />`;
       setStatus('Detection complete.', 'success');
-      detectionList.innerHTML = '<div class="no-detections">See annotated image for detections.</div>';
-
     } catch (err) {
       setStatus(`Error: ${err.message}`, 'error');
     } finally {
@@ -421,9 +475,8 @@
     selectedFile = null;
     fileInput.value = '';
     fileInfo.textContent = 'No file selected';
-    inputContainer.innerHTML = '<div class="placeholder">Input image will appear here</div>';
-    outputContainer.innerHTML = '<div class="placeholder">Annotated result will appear here</div>';
-    detectionList.innerHTML = '<div class="no-detections">No detections yet.</div>';
+    inputBox.innerHTML = '<div class="placeholder">Input image will appear here</div>';
+    outputBox.innerHTML = '<div class="placeholder">Annotated result will appear here</div>';
     detectBtn.disabled = true;
     setStatus('Select an image to begin.');
   });
