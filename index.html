@@ -3,455 +3,431 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YOLO Detection Viewer</title>
+  <title>Traffic Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#0b1220;
-      --card:#111827;
-      --card2:#1f2937;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#38bdf8;
-      --green:#22c55e;
-      --red:#ef4444;
-      --border:#334155;
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --surface2: #1a1e28;
+      --border: #252a38;
+      --border-active: #3d8ef8;
+      --text: #e2e6f0;
+      --muted: #6b7280;
+      --accent: #3d8ef8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial,Helvetica,sans-serif;
-      background:linear-gradient(180deg,#0b1220,#111827);
-      color:var(--text);
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    header{
-      padding:28px 18px 10px;
-      text-align:center;
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
     }
-    header h1{margin:0;font-size:2rem}
-    header p{max-width:820px;margin:10px auto 0;color:var(--muted);line-height:1.5}
-    .container{
-      width:min(1180px,calc(100% - 24px));
-      margin:18px auto 36px;
-      display:grid;
-      gap:16px;
-      grid-template-columns:1fr;
+
+    header h1 {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--text);
     }
-    .card{
-      background:rgba(17,24,39,.96);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:18px;
-      box-shadow:0 12px 30px rgba(0,0,0,.22);
+
+    header span {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--muted);
     }
-    h2{margin:0 0 12px;font-size:1.2rem}
-    .grid{
-      display:grid;
-      gap:16px;
-      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      height: calc(100vh - 61px);
     }
-    #dropZone{
-      border:2px dashed #64748b;
-      background:rgba(31,41,55,.7);
-      border-radius:16px;
-      min-height:180px;
-      padding:24px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      gap:8px;
-      cursor:pointer;
-      transition:.2s ease;
+
+    .panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
     }
-    #dropZone.dragover{
-      border-color:var(--accent);
-      background:rgba(56,189,248,.12);
-      transform:scale(1.01);
+
+    .panel:last-child {
+      border-right: none;
     }
-    .muted{color:var(--muted)}
-    .small{font-size:.93rem;line-height:1.45;color:var(--muted)}
-    .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-    button,select,input[type="text"]{
-      font:inherit;
+
+    .panel-header {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
-    button{
-      border:0;
-      padding:11px 16px;
-      border-radius:10px;
-      cursor:pointer;
-      color:white;
-      background:var(--accent);
+
+    .panel-body {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
     }
-    button.secondary{background:var(--card2)}
-    button.success{background:var(--green)}
-    button.danger{background:var(--red)}
-    select,input[type="text"]{
-      width:100%;
-      margin-top:8px;
-      padding:12px;
-      border-radius:10px;
-      background:var(--card2);
-      color:var(--text);
-      border:1px solid var(--border);
-      outline:none;
+
+    #dropZone {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--surface);
+      padding: 32px;
+      text-align: center;
     }
-    .preview{
-      width:100%;
-      background:#0a1020;
-      border:1px solid var(--border);
-      border-radius:14px;
-      overflow:hidden;
-      min-height:220px;
+
+    #dropZone:hover,
+    #dropZone.dragover {
+      border-color: var(--border-active);
+      background: rgba(61, 142, 248, 0.04);
     }
-    img,video,canvas{
-      width:100%;
-      display:block;
-      max-height:520px;
-      object-fit:contain;
-      background:#0a1020;
+
+    #dropZone .label {
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 500;
     }
-    .hidden{display:none}
-    #status{
-      margin-top:10px;
-      min-height:24px;
-      color:#dbeafe;
+
+    #dropZone .sub {
+      font-size: 0.8rem;
+      color: var(--muted);
     }
-    .sourceLabel{
-      display:inline-block;
-      margin-top:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#0f172a;
-      border:1px solid var(--border);
-      color:#cbd5e1;
-      font-size:.9rem;
+
+    input[type="file"] { display: none; }
+
+    .file-info {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 10px 14px;
+      background: var(--surface);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .image-container {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      position: relative;
+    }
+
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .placeholder {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .btn {
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 11px 20px;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) { border-color: var(--muted); }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row .btn { flex: 1; }
+
+    #status {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    #status.running { color: var(--accent); border-color: rgba(61,142,248,0.3); }
+    #status.success { color: var(--success); border-color: rgba(34,197,94,0.3); }
+    #status.error   { color: var(--danger);  border-color: rgba(239,68,68,0.3); }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(61,142,248,0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .detections {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .detection-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .detection-label {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text);
+    }
+
+    .detection-conf {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: rgba(61,142,248,0.1);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .no-detections {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>YOLO Detection Viewer</h1>
-    <p>
-      Upload an image or video, use the webcam, or paste a CCTV stream URL.
-      Choose a model and press Start Detection to run the selected source.
-    </p>
-  </header>
 
-  <main class="container">
-    <section class="card">
-      <h2>Choose Source</h2>
-      <div class="grid">
-        <div>
-          <div id="dropZone">
-            <strong>Drag & drop</strong>
-            <span class="muted">Images or videos here</span>
-            <span class="muted">or click to choose a file</span>
-          </div>
-          <input type="file" id="fileInput" accept="image/*,video/*" class="hidden" />
-          <p id="fileInfo" class="small">No file selected.</p>
-          <span id="sourceType" class="sourceLabel">Source: none</span>
-        </div>
+<header>
+  <h1>Traffic Detection</h1>
+  <span>YOLOv5 — SP104</span>
+</header>
 
-        <div>
-          <label class="small" for="cameraBtn">Webcam</label>
-          <div class="row">
-            <button id="cameraBtn" class="secondary">Use Webcam</button>
-            <button id="stopCameraBtn" class="danger">Stop Webcam</button>
-          </div>
-          <p class="small">This uses browser camera access via <code>getUserMedia</code> [web:16].</p>
+<main>
+  <!-- LEFT: Input -->
+  <div class="panel">
+    <div class="panel-header">Input</div>
+    <div class="panel-body">
 
-          <label class="small" for="cctvUrl">CCTV / Stream URL</label>
-          <input id="cctvUrl" type="text" placeholder="Paste HLS (.m3u8), MJPEG, or browser-playable stream URL" />
-          <div class="row">
-            <button id="loadStreamBtn" class="secondary">Load Stream</button>
-            <button id="clearStreamBtn" class="danger">Clear Stream</button>
-          </div>
-          <p class="small">A browser-playable stream works best with HLS or MJPEG; RTSP usually needs conversion first [web:22][web:34].</p>
-        </div>
+      <div id="dropZone">
+        <span class="label">Drop image here</span>
+        <span class="sub">or click to select a file</span>
       </div>
-    </section>
+      <input type="file" id="fileInput" accept="image/*" />
 
-    <section class="card">
-      <h2>Model Selection</h2>
-      <div class="grid">
-        <div>
-          <label class="small" for="modelSelect">Select model</label>
-          <select id="modelSelect">
-            <option value="yolov8n.onnx">YOLOv8 Nano</option>
-            <option value="yolov8s.onnx">YOLOv8 Small</option>
-            <option value="yolov10n.onnx">YOLOv10 Nano</option>
-            <option value="custom">Custom Uploaded Model</option>
-          </select>
-        </div>
-        <div>
-          <label class="small" for="modelUpload">Upload model</label>
-          <input id="modelUpload" type="file" accept=".onnx,.pt,.bin,.json" />
-          <p id="modelInfo" class="small">Selected model: YOLOv8 Nano</p>
-        </div>
-      </div>
-    </section>
+      <div class="file-info" id="fileInfo">No file selected</div>
 
-    <section class="card">
-      <h2>Preview</h2>
-      <div class="preview">
-        <img id="imagePreview" class="hidden" alt="Uploaded preview" />
-        <video id="videoPreview" class="hidden" controls playsinline></video>
-        <video id="webcam" class="hidden" autoplay playsinline muted></video>
-        <canvas id="canvasPreview" class="hidden"></canvas>
+      <div class="image-container" id="inputContainer">
+        <div class="placeholder">Input image will appear here</div>
       </div>
 
       <div class="row">
-        <button id="startBtn" class="success">Start Detection</button>
-        <button id="resetBtn" class="secondary">Reset</button>
+        <button class="btn btn-primary" id="detectBtn" disabled>Run Detection</button>
+        <button class="btn btn-secondary" id="resetBtn">Reset</button>
       </div>
-      <div id="status">Choose a source and model, then press Start Detection.</div>
-    </section>
-  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script>
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const sourceType = document.getElementById('sourceType');
-    const imagePreview = document.getElementById('imagePreview');
-    const videoPreview = document.getElementById('videoPreview');
-    const webcam = document.getElementById('webcam');
-    const canvasPreview = document.getElementById('canvasPreview');
-    const statusBox = document.getElementById('status');
+      <div id="status">Select an image to begin.</div>
 
-    const cameraBtn = document.getElementById('cameraBtn');
-    const stopCameraBtn = document.getElementById('stopCameraBtn');
-    const cctvUrl = document.getElementById('cctvUrl');
-    const loadStreamBtn = document.getElementById('loadStreamBtn');
-    const clearStreamBtn = document.getElementById('clearStreamBtn');
+    </div>
+  </div>
 
-    const modelSelect = document.getElementById('modelSelect');
-    const modelUpload = document.getElementById('modelUpload');
-    const modelInfo = document.getElementById('modelInfo');
+  <!-- RIGHT: Output -->
+  <div class="panel">
+    <div class="panel-header">Output</div>
+    <div class="panel-body">
 
-    const startBtn = document.getElementById('startBtn');
-    const resetBtn = document.getElementById('resetBtn');
+      <div class="image-container" id="outputContainer">
+        <div class="placeholder">Annotated result will appear here</div>
+      </div>
 
-    let currentSource = null;
-    let currentKind = null;
-    let mediaStream = null;
-    let hlsPlayer = null;
+      <div id="detectionList">
+        <div class="no-detections">No detections yet.</div>
+      </div>
 
-    function setStatus(msg){ statusBox.textContent = msg; }
-    function setSourceLabel(msg){ sourceType.textContent = `Source: ${msg}`; }
+    </div>
+  </div>
+</main>
 
-    function hideAllPreviews(){
-      imagePreview.classList.add('hidden');
-      videoPreview.classList.add('hidden');
-      webcam.classList.add('hidden');
-      canvasPreview.classList.add('hidden');
+<script>
+  const API = 'https://sp104greentraff-traffic-detection-api.hf.space';
+
+  const dropZone       = document.getElementById('dropZone');
+  const fileInput      = document.getElementById('fileInput');
+  const fileInfo       = document.getElementById('fileInfo');
+  const inputContainer = document.getElementById('inputContainer');
+  const outputContainer= document.getElementById('outputContainer');
+  const detectBtn      = document.getElementById('detectBtn');
+  const resetBtn       = document.getElementById('resetBtn');
+  const statusBox      = document.getElementById('status');
+  const detectionList  = document.getElementById('detectionList');
+
+  let selectedFile = null;
+
+  function setStatus(msg, type = '') {
+    statusBox.className = type;
+    statusBox.innerHTML = (type === 'running' ? '<span class="spinner"></span>' : '') + msg;
+  }
+
+  function showInputImage(file) {
+    const url = URL.createObjectURL(file);
+    inputContainer.innerHTML = `<img src="${url}" alt="Input" />`;
+  }
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      setStatus('Please select a valid image file.', 'error');
+      return;
     }
+    selectedFile = file;
+    fileInfo.textContent = file.name;
+    showInputImage(file);
+    outputContainer.innerHTML = '<div class="placeholder">Run detection to see results.</div>';
+    detectionList.innerHTML = '<div class="no-detections">No detections yet.</div>';
+    detectBtn.disabled = false;
+    setStatus('Image loaded. Press Run Detection.');
+  }
 
-    function clearStreamPlayer(){
-      if (hlsPlayer) {
-        hlsPlayer.destroy();
-        hlsPlayer = null;
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+  detectBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    detectBtn.disabled = true;
+    setStatus('Sending to detection server...', 'running');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await fetch(`${API}/detect/image`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Server error ${response.status}: ${err}`);
       }
-      videoPreview.pause();
-      videoPreview.removeAttribute('src');
-      videoPreview.load();
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      outputContainer.innerHTML = `<img src="${url}" alt="Detection result" />`;
+
+      setStatus('Detection complete.', 'success');
+      detectionList.innerHTML = '<div class="no-detections">See annotated image for detections.</div>';
+
+    } catch (err) {
+      setStatus(`Error: ${err.message}`, 'error');
+    } finally {
+      detectBtn.disabled = false;
     }
+  });
 
-    function selectImagePreview(url){
-      hideAllPreviews();
-      clearStreamPlayer();
-      imagePreview.src = url;
-      imagePreview.classList.remove('hidden');
-    }
+  resetBtn.addEventListener('click', () => {
+    selectedFile = null;
+    fileInput.value = '';
+    fileInfo.textContent = 'No file selected';
+    inputContainer.innerHTML = '<div class="placeholder">Input image will appear here</div>';
+    outputContainer.innerHTML = '<div class="placeholder">Annotated result will appear here</div>';
+    detectionList.innerHTML = '<div class="no-detections">No detections yet.</div>';
+    detectBtn.disabled = true;
+    setStatus('Select an image to begin.');
+  });
+</script>
 
-    function selectVideoPreview(url){
-      hideAllPreviews();
-      clearStreamPlayer();
-      videoPreview.src = url;
-      videoPreview.classList.remove('hidden');
-    }
-
-    function selectWebcamPreview(){
-      hideAllPreviews();
-      webcam.classList.remove('hidden');
-    }
-
-    function selectCanvasPreview(){
-      hideAllPreviews();
-      canvasPreview.classList.remove('hidden');
-    }
-
-    function handleFile(file){
-      if (!file) return;
-      fileInfo.textContent = `Selected file: ${file.name}`;
-      currentSource = file;
-      currentKind = file.type.startsWith('image/') ? 'image' : 'video';
-      setSourceLabel(file.name);
-
-      const url = URL.createObjectURL(file);
-      if (currentKind === 'image') {
-        selectImagePreview(url);
-      } else {
-        selectVideoPreview(url);
-      }
-      setStatus(`Loaded ${currentKind}: ${file.name}. Press Start Detection.`);
-    }
-
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    dropZone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      handleFile(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
-
-    cameraBtn.addEventListener('click', async () => {
-      try {
-        stopCamera();
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        webcam.srcObject = mediaStream;
-        currentSource = webcam;
-        currentKind = 'webcam';
-        selectWebcamPreview();
-        setSourceLabel('webcam');
-        setStatus('Webcam ready. Press Start Detection.');
-      } catch (err) {
-        setStatus(`Camera error: ${err.name}`);
-      }
-    });
-
-    function stopCamera(){
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(t => t.stop());
-        mediaStream = null;
-      }
-      webcam.srcObject = null;
-    }
-
-    stopCameraBtn.addEventListener('click', () => {
-      stopCamera();
-      if (currentKind === 'webcam') {
-        currentSource = null;
-        currentKind = null;
-      }
-      setStatus('Webcam stopped.');
-      setSourceLabel('none');
-      hideAllPreviews();
-    });
-
-    loadStreamBtn.addEventListener('click', async () => {
-      const url = cctvUrl.value.trim();
-      if (!url) {
-        setStatus('Paste a CCTV stream URL first.');
-        return;
-      }
-
-      stopCamera();
-      currentSource = url;
-      currentKind = 'stream';
-      setSourceLabel('CCTV stream');
-      hideAllPreviews();
-      clearStreamPlayer();
-
-      if (url.endsWith('.m3u8') && window.Hls && Hls.isSupported()) {
-        hlsPlayer = new Hls();
-        hlsPlayer.loadSource(url);
-        hlsPlayer.attachMedia(videoPreview);
-        videoPreview.classList.remove('hidden');
-        videoPreview.play().catch(() => {});
-        setStatus('HLS stream loaded. Press Start Detection.');
-      } else {
-        videoPreview.src = url;
-        videoPreview.classList.remove('hidden');
-        videoPreview.play().catch(() => {});
-        setStatus('Stream loaded. Press Start Detection.');
-      }
-    });
-
-    clearStreamBtn.addEventListener('click', () => {
-      cctvUrl.value = '';
-      clearStreamPlayer();
-      if (currentKind === 'stream') {
-        currentSource = null;
-        currentKind = null;
-      }
-      setStatus('Stream cleared.');
-      setSourceLabel('none');
-      hideAllPreviews();
-    });
-
-    modelSelect.addEventListener('change', () => {
-      modelInfo.textContent = `Selected model: ${modelSelect.value}`;
-    });
-
-    modelUpload.addEventListener('change', () => {
-      const file = modelUpload.files[0];
-      if (!file) return;
-      modelSelect.value = 'custom';
-      modelInfo.textContent = `Selected model: ${file.name}`;
-      setStatus(`Custom model uploaded: ${file.name}`);
-    });
-
-    async function runDetection(){
-      if (!currentSource || !currentKind) {
-        setStatus('Choose an image, video, webcam, or stream first.');
-        return;
-      }
-      setStatus(`Running detection on ${currentKind} with model ${modelSelect.value}.`);
-
-      if (currentKind === 'image') {
-        selectCanvasPreview();
-        const ctx = canvasPreview.getContext('2d');
-        canvasPreview.width = imagePreview.naturalWidth || imagePreview.width;
-        canvasPreview.height = imagePreview.naturalHeight || imagePreview.height;
-        ctx.drawImage(imagePreview, 0, 0, canvasPreview.width, canvasPreview.height);
-        setStatus('Image is ready for YOLO inference overlay.');
-        return;
-      }
-
-      if (currentKind === 'video' || currentKind === 'stream') {
-        videoPreview.classList.remove('hidden');
-        const playPromise = videoPreview.play();
-        if (playPromise) await playPromise.catch(() => {});
-        setStatus('Video or stream is playing and ready for frame-by-frame detection.');
-        return;
-      }
-
-      if (currentKind === 'webcam') {
-        webcam.classList.remove('hidden');
-        setStatus('Webcam is active and ready for live detection.');
-      }
-    }
-
-    startBtn.addEventListener('click', runDetection);
-
-    resetBtn.addEventListener('click', () => {
-      stopCamera();
-      clearStreamPlayer();
-      currentSource = null;
-      currentKind = null;
-      fileInfo.textContent = 'No file selected.';
-      sourceType.textContent = 'Source: none';
-      modelSelect.value = 'yolov8n.onnx';
-      modelInfo.textContent = 'Selected model: YOLOv8 Nano';
-      cctvUrl.value = '';
-      fileInput.value = '';
-      modelUpload.value = '';
-      hideAllPreviews();
-      setStatus('Reset complete.');
-    });
-  </script>
 </body>
 </html>
-
