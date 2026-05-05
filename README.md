@@ -1,87 +1,192 @@
-USE THIS TO ACTIVATE CONDA ENVIRONMENT: conda activate trafficv5
+# SP-104 — Real-Time Object Detection for Traffic Cameras
 
+**Course:** 4850 Senior Project | Spring 2026  
+**Team:** Zachary Gray, Bregan Frank, Jeyden Johnson, David Obasi  
+**Project Site:** https://grayobasijohnsonfrank-sp104.github.io/grayobasijohnsonfrank-sp104/
 
+---
 
- Quick Start
-bash
-# Clone and setup
-git clone https://github.com/your-org/sp104-traffic-detection.git
+## Overview
+
+A YOLOv5-based object detection system trained to identify traffic-related objects from images. The trained model is served through a FastAPI backend hosted on Hugging Face Spaces and accessible via a GitHub Pages frontend.
+
+**Detectable Classes:**
+
+| ID | Class |
+|----|-------|
+| 0 | Human |
+| 1 | Car |
+| 2 | Truck |
+| 3 | Regulatory Sign |
+| 4 | Stop Sign |
+| 5 | Warning Sign |
+
+**Model Performance:** mAP@0.5 ≈ 0.85
+
+---
+
+## Repository Structure
+
+```
+grayobasijohnsonfrank-sp104/
+├── index.html              # GitHub Pages frontend
+├── yolov5/                 # YOLOv5 source (detached from upstream)
+│   ├── backend/
+│   │   ├── main.py         # FastAPI server
+│   │   ├── best.pt         # Trained model weights
+│   │   └── requirements.txt
+│   ├── models/
+│   ├── utils/
+│   ├── train.py
+│   ├── detect.py
+│   └── data/
+│       └── data.yaml
+└── assets/
+```
+
+---
+
+## Requirements
+
+- Windows 10/11 (tested), macOS/Linux compatible
+- NVIDIA GPU with CUDA support (RTX 3050 Ti or better recommended)
+- Miniconda: https://docs.conda.io/en/latest/miniconda.html
+- Python 3.11
+
+---
+
+## Local Setup
+
+**1. Clone the repository:**
+```bash
+git clone https://github.com/grayobasijohnsonfrank-sp104/grayobasijohnsonfrank-sp104
+cd grayobasijohnsonfrank-sp104
+```
+
+**2. Create and activate the Conda environment:**
+```bash
+conda create --name trafficv5 python=3.11
+conda activate trafficv5
+```
+
+**3. Install dependencies:**
+```bash
 cd yolov5
 pip install -r requirements.txt
+```
 
-# Train model
-python train.py --img 640 --batch 16 --epochs 50 --data ../data/dataset.yaml --weights yolov5s.pt
+**4. Install PyTorch with CUDA support:**
+```bash
+pip uninstall torch torchvision torchaudio -y
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
 
-# Run inference
-python detect.py --weights runs/train/exp/weights/best.pt --source traffic_video.mp4
- Project Overview
-Goal: Build a real-time object detection system for traffic cameras using YOLOv5.
+**5. Install full OpenCV (required for webcam/display):**
+```bash
+pip uninstall opencv-python-headless -y
+pip install opencv-python
+```
 
-Key Features:
+**6. Verify GPU is available:**
+```bash
+python -c "import torch; print(torch.cuda.is_available())"
+```
+Should return `True`. If not, repeat step 4.
 
-Detect vehicles and pedestrians in real-time
+---
 
-Fine-tuned YOLOv5 on traffic data
+## Running Detection (DISCLAIMER: VIDEO DETECTION HAS FLASHING LIGHTS AND COLORS. IF YOU HAVE COGNITIVE DISABILITY SUCH AS EPILEPSY PLEASE BE ADVISED)
 
-Achieve high mAP (>0.75) at 30+ FPS
+All commands must be run from inside the `yolov5/` folder with the `trafficv5` environment activated.
 
- Dataset
-Source: Road Sign Detection Dataset
+**Single image:**
+```bash
+python detect.py --weights yolov5/backend/best.pt --img 640 --conf 0.25 --save-conf --source "path/to/image.jpg"
+```
 
-Classes: Vehicles, Pedestrians, Traffic Signs, Bicycles
+**Folder of images:**
+```bash
+python detect.py --weights yolov5/backend/best.pt --img 640 --conf 0.25 --save-conf --source "path/to/folder/"
+```
 
- Implementation
-1. Data Preparation
-Annotate traffic images
+**Video file:**
+```bash
+python detect.py --weights yolov5/backend/best.pt --img 640 --conf 0.25 --save-conf --source "path/to/video.mp4"
+```
 
-Split into train/val/test sets
+**Webcam:**
+```bash
+python detect.py --weights yolov5/backend/best.pt --img 640 --conf 0.25 --source 0
+```
 
-Configure dataset.yaml
+Results are saved to `runs/detect/expX/`.
 
-2. Training
-Start from pretrained YOLOv5 weights
+To lower the confidence threshold and catch more detections:
+```bash
+--conf 0.1
+```
 
-Fine-tune on traffic data
+---
 
-Optimize hyperparameters
+## Training the Model
 
-3. Evaluation
-Calculate mAP@0.5
+**Dataset configuration (`data/data.yaml`):**
+```yaml
+train: "path/to/data/train"
+val: "path/to/data/validation"
 
-Test inference speed (FPS)
+nc: 6
+names: ['human', 'car', 'truck', 'regulatory', 'stop', 'warning']
+```
 
-Analyze per-class performance
+**Training command:**
+```bash
+python train.py --img 640 --batch 16 --epochs 10 --data data/data.yaml --weights yolov5s.pt --name my_run --device 0
+```
 
-4. Deployment
-Real-time stream processing
+Trained weights are saved to `runs/train/my_run/weights/best.pt`.
 
-Video file inference
+---
 
-Webcam demonstration
+## Web Deployment
 
- Results
-Target Metrics:
+The detection endpoint is hosted on Hugging Face Spaces using Docker:
 
-mAP@0.5: > 0.75
+**Backend URL:** `https://sp104greentraff-traffic-detection-api.hf.space`
 
-Inference Speed: 30+ FPS (GPU)
+**Available endpoints:**
 
-Model Size: < 50MB (optimized)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Health check |
+| `/detect/image` | POST | Upload image, returns annotated result |
+| `/docs` | GET | Interactive Swagger UI |
 
- Project Structure
-text
-data/           # Dataset and annotations
-models/         # Trained weights
-src/            # Source code
-├── training/   # Training scripts
-├── inference/  # Detection scripts
-└── utils/      # Helper functions
-results/        # Evaluation metrics
-stream_app/     # Real-time demo
-🔗 References
-YOLOv5 Docs
+The GitHub Pages frontend sends images to the backend via `fetch()` and displays the annotated result with bounding boxes and confidence scores.
 
-PyTorch Tutorials
+---
 
-Custom YOLOv5 Training Guide
+## Constraints
 
+- Detection accuracy degrades in low-light, rain, or heavy occlusion
+- Webcam detection requires full `opencv-python` (not headless)
+- GPU strongly recommended for training — CPU training is significantly slower
+- Hugging Face free tier uses CPU inference — image results may take a few seconds
+- The Hugging Face Space may sleep after 15 minutes of inactivity — first request after sleep takes 30–60 seconds to wake up
+- Model was trained on North American road conditions and signs
+
+---
+
+## Dataset Sources
+
+- **COCO 2017** — human, car, truck classes (downloaded via FiftyOne)
+- **US Road Signs v72** — regulatory, stop, warning sign classes (Roboflow)
+- Total training images: ~1,200
+
+---
+
+## Links
+
+- **Project Website:** https://grayobasijohnsonfrank-sp104.github.io/grayobasijohnsonfrank-sp104/
+- **GitHub Repository:** https://github.com/grayobasijohnsonfrank-sp104/grayobasijohnsonfrank-sp104
+- **Hugging Face Space:** https://huggingface.co/spaces/sp104greentraff/traffic-detection-api
